@@ -107,9 +107,9 @@ source $CONFIG_LOCATION/.aws.$ENVIRONMENT
 
 # Pre-flight check is good, let's continue.
 
-BUCKET_KEY="${APP_NAME}/tfstate/${ENVIRONMENT}.tfstate"
+BUCKET_KEY="${APP_NAME}/tfstate/${ENVIRONMENT}"
 TFVARS="${CONFIG_LOCATION}/${APP_NAME}/${ENVIRONMENT}.tfvars"
-
+echo $REGION
 echo ""
 echo "Using variables: $TFVARS"
 echo ""
@@ -118,14 +118,14 @@ echo ""
 set -e
 
 # Nab the latest tfstate.
-aws s3 sync --region=$REGION --exclude="*" --include="terraform.tfstate" "s3://${BUCKET}/${BUCKET_KEY}" ./
+aws s3 sync --region=$REGION --exclude="*" --include="*.tfstate" "s3://${BUCKET}/${BUCKET_KEY}" .
 
 TERRAFORM_COMMAND="terraform $ACTION -var-file ${TFVARS}"
 
 # Run TF; if this errors out we need to keep going.
 set +e
 
-echo $TERRAFORM_COMMAND
+#echo $TERRAFORM_COMMAND
 echo ""
 
 $TERRAFORM_COMMAND
@@ -134,6 +134,6 @@ EXIT_CODE=$?
 set -e
 
 # Upload tfstate to S3.
-aws s3 sync --region=$REGION --exclude="*" --include="terraform.tfstate" ./ "s3://${BUCKET}/${BUCKET_KEY}"
+aws s3 sync --region=$REGION --exclude="*" --include="*.tfstate" . "s3://${BUCKET}/${BUCKET_KEY}"
 
 exit $EXIT_CODE
