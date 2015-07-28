@@ -136,10 +136,13 @@ echo ""
 # Bail on errors.
 set -e
 
-# Nab the latest tfstate.
-aws s3 sync --region=$REGION --exclude="*" --include="*.tfstate" "s3://${BUCKET}/${BUCKET_KEY}" .
+#make sure the environment dirs exist
+mkdir -p tfstate/${ENVIRONMENT}
 
-TERRAFORM_COMMAND="terraform $ACTION -var-file ${TFVARS}"
+# Nab the latest tfstate.
+aws s3 sync --region=$REGION --exclude="*" --include="*.tfstate" "s3://${BUCKET}/${BUCKET_KEY}" ./tfstate/${ENVIRONMENT}/
+
+TERRAFORM_COMMAND="terraform $ACTION -var-file ${TFVARS} -state=./tfstate/${ENVIRONMENT}/terraform.tfstate"
 
 # Run TF; if this errors out we need to keep going.
 set +e
@@ -156,7 +159,7 @@ set -e
 contains_element "$1" "${SYNC_COMMANDS[@]}"
 if [ $? -eq 0 ]; then
   echo "Syncing state to S3"
-  aws s3 sync --region=$REGION --exclude="*" --include="*.tfstate" . "s3://${BUCKET}/${BUCKET_KEY}"
+  aws s3 sync --region=$REGION --exclude="*" --include="*.tfstate" ./tfstate/${ENVIRONMENT}/ "s3://${BUCKET}/${BUCKET_KEY}"
 fi
 
 exit $EXIT_CODE
