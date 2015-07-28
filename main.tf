@@ -9,7 +9,7 @@ resource "aws_instance" "nat_a" {
   # Lookup the correct AMI based on the region we specified
   ami = "${lookup(var.amazon_nat_ami, var.aws_region)}"
 
-  /*subnet_id = "${aws_subnet.search_public_a.id}"*/
+  subnet_id = "${var.subnet_id}"
   associate_public_ip_address = "true"
   /*security_groups = ["${aws_security_group.nat.id}"]*/
   key_name = "${var.key_name}"
@@ -27,5 +27,4 @@ resource "aws_instance" "nat_a" {
   tags {
     Name = "exprimental-2"
   }
-
 }

@@ -17,7 +17,7 @@ TFSTATE="terraform.tfstate"
 ENVIRONMENTS=(dc0 dc2)
 COMMANDS=(apply destroy plan refresh)
 SYNC_COMMANDS=(apply destroy refresh)
-APP_NAME=small
+APP_NAME=terraform-ec2
 HELPARGS=("help" "-help" "--help" "-h" "-?")
 
 ACTION=$1
@@ -26,6 +26,7 @@ ENVIRONMENT=$2
 function help {
   echo "USAGE: ${0} setup <config-location>"
   echo "USAGE: ${0} <action> <environment>"
+  echo "USAGE: ${0} upload <environment>"
   echo ""
   echo -n "Valid environments are: "
   local i
@@ -79,18 +80,9 @@ fi
 
 # Do we need to setup
 if [ "$1" == "setup" ]; then
+  echo "Setting config location ${2}"
   echo "CONFIG_LOCATION=${2}" > $CONFIG_FILE
   exit 0
-fi
-
-# Validate the environment.
-contains_element "$1" "${COMMANDS[@]}"
-if [ $? -ne 0 ]; then
-  echo "ERROR: $3 is not a supported command"
-  echo ""
-  echo "supported commands are (apply destroy refresh plan)"
-  echo ""
-  exit 1
 fi
 
 # Validate the environment.
@@ -127,8 +119,26 @@ source $CONFIG_LOCATION/.aws.$ENVIRONMENT
 # Pre-flight check is good, let's continue.
 
 BUCKET_KEY="${APP_NAME}/tfstate/${ENVIRONMENT}"
+
+# Are we uploading
+if [ "$1" == "upload" ]; then
+  echo "Syncing state to S3"
+  aws s3 sync --region=$REGION --exclude="*" --include="*.tfstate" ./tfstate/${ENVIRONMENT}/ "s3://${BUCKET}/${BUCKET_KEY}"
+
+  exit 0
+fi
+
+# Validate the environment.
+contains_element "$1" "${COMMANDS[@]}"
+if [ $? -ne 0 ]; then
+  echo "ERROR: $3 is not a supported command"
+  echo ""
+  echo "supported commands are (apply destroy refresh plan)"
+  echo ""
+  exit 1
+fi
+
 TFVARS="${CONFIG_LOCATION}/${APP_NAME}/${ENVIRONMENT}.tfvars"
-echo $REGION
 echo ""
 echo "Using variables: $TFVARS"
 echo ""

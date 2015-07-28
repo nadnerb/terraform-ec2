@@ -15,6 +15,10 @@ variable "aws_region" {
   default = "ap-southeast-2"
 }
 
+variable "subnet_id"{
+  description = "Default subnet to launch instances into."
+}
+
 variable "amazon_nat_ami" {
   default = {
     eu-central-1 = "ami-46073a5b"
@@ -23,4 +27,3 @@ variable "amazon_nat_ami" {
     us-west-1 = "ami-7da94839"
   }
 }
-
